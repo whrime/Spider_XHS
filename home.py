@@ -77,7 +77,7 @@ class Data_Spider():
             save_to_xlsx(note_list, file_path)
 
     def spider_some_note_by_download(self, notes: list, cookies_str: str, base_path: dict, save_choice: str,
-                                     excel_name: str = '', proxies=None, start: int = None, end: int = None):
+                                     excel_name: str = '', proxies=None, hasComment: bool = False, start: int = None, end: int = None):
         """
         爬取一些笔记的信息
         :param notes: 笔记URL列表（最新的笔记在最前面）
@@ -118,8 +118,11 @@ class Data_Spider():
                 time.sleep(4)  # 1 second delay, adjust as needed
 
                 success, msg, note_info = self.spider_note(note_url, cookies_str, proxies)
-                time.sleep(4)  # 4 second delay, adjust as needed
-                success, msg, comment_note, comment_display = self.spider_comment(note_url, cookies_str, proxies)
+                if hasComment:
+                    time.sleep(4)  # 4 second delay, adjust as needed
+                    success, msg, comment_note, comment_display = self.spider_comment(note_url, cookies_str, proxies)
+                else:
+                    comment_note, comment_display = None, None
                 if note_info is not None and success:
                     info = f'第{current_index}个笔记, '
                     note_list.append(note_info)
@@ -148,7 +151,7 @@ class Data_Spider():
                 except Exception as e:
                     print(f"Error saving to Excel: {str(e)}")
 
-    def spider_user_all_note(self, user_url: str, cookies_str: str, base_path: dict, save_choice: str, excel_name: str = '', proxies=None, start: int = None, end: int = None):
+    def spider_user_all_note(self, user_url: str, cookies_str: str, base_path: dict, save_choice: str, excel_name: str = '', proxies=None, hasComment: bool = False, start: int = None, end: int = None):
         """
         爬取一个用户的所有笔记
         :param user_url:
@@ -166,7 +169,7 @@ class Data_Spider():
                     note_list.append(note_url)
             if save_choice == 'all' or save_choice == 'excel' or save_choice == 'content':
                 excel_name = user_url.split('/')[-1].split('?')[0]
-            self.spider_some_note_by_download(note_list, cookies_str, base_path, save_choice, excel_name, proxies,start, end)
+            self.spider_some_note_by_download(note_list, cookies_str, base_path, save_choice, excel_name, proxies,hasComment, start, end)
         except Exception as e:
             success = False
             msg = e
@@ -205,14 +208,14 @@ class Data_Spider():
         logger.info(f'搜索关键词 {query} 笔记: {success}, msg: {msg}')
         return note_list, success, msg
 
-    def userHome(self, url_list, cookies_str: str, base_path: dict, save_choice: str, start: int = None, end: int = None):
+    def userHome(self, url_list, cookies_str: str, base_path: dict, save_choice: str, hasComment: bool = False, start: int = None, end: int = None):
         # url_list = [
         #     'https://www.xiaohongshu.com/user/profile/6185ce66000000001000705b',
         #     'https://www.xiaohongshu.com/user/profile/6034d6f20000000001006fbb',
         # ]
         for user_url in url_list:
             try:
-                self.spider_user_all_note(user_url, cookies_str, base_path, 'content',  '', None,start, end)
+                self.spider_user_all_note(user_url, cookies_str, base_path, 'content',  '', None,hasComment, start, end)
             except:
                 print(f'用户 {user_url} 查询失败')
 
@@ -240,13 +243,15 @@ if __name__ == '__main__':
     # data_spider.spider_some_note_by_download(notes, cookies_str, base_path, 'all', 'test')
 
     # 2 爬取用户的所有笔记信息 用户链接 如下所示 注意此url会过期！
+    changLe = 'https://www.xiaohongshu.com/user/profile/647c3f3f000000001f005b66?xsec_token=ABFTmFryTFUz5rHVPotwHZxnKflqjjujjrdv9thc0x5uM%3D&xsec_source=pc_search'
     wendaChiyu = 'https://www.xiaohongshu.com/user/profile/61d3b6350000000021027741?xsec_token=ABcW5k7InQO-DxZIzLf9t9yZ-3CfvEK5ja0NG5zSPYa2c=&xsec_source=pc_note'
     lvShaoJian = 'https://www.xiaohongshu.com/user/profile/658fbc1e0000000022012d90?xsec_token=AB3KOmCoVMCHstjRwG4RbwmUq_K0qE4vqQOo3ke2FLlDM%3D&xsec_source=pc_search',
-    user_url_list = [wendaChiyu
+    user_url_list = [changLe
         ]
+    hasComment = False
     start = 41 # None
     end = None # 40
-    data_spider.userHome(user_url_list, cookies_str, base_path, 'content',start, end)
+    data_spider.userHome(user_url_list, cookies_str, base_path, 'content',hasComment, start, end)
 
     # # 3 搜索指定关键词的笔记
     # query = "榴莲"

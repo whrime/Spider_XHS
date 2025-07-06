@@ -254,7 +254,7 @@ def handle_comment_info_sub(comment_list):
         }
         comment_display = f"{comment_dp['show_tags']}_{comment_dp['nickname']}:  {comment_dp['content']}  at: {comment_dp['upload_time']} \n{'===扩展:' if (comment_dp.get('sub_comments_displays', '').strip() != '') else ''}{comment_dp['sub_comments_displays']}"
         comments.append(comment)
-        comment_displays += f"{comment_display}{'\n' if comment_display.strip() != '' else ''}"
+        comment_displays += comment_display + '\n' if comment_display.strip() else comment_display
     return comments, comment_displays
 def save_to_xlsx(datas, file_path, type='note'):
     wb = openpyxl.Workbook()
@@ -333,7 +333,7 @@ def save_custom_note_detail(note, path, index =0):
     with open(path + '/' + 'detail.txt', mode="a", encoding="utf-8") as f:
         # 逐行输出到txt里
         f.write(f">>>>>>>>{index}_")
-        f.write(f"笔记url: {f'https://www.xiaohongshu.com/explore/{note['note_id']}'}\n")
+        f.write(f"笔记url: https://www.xiaohongshu.com/explore/{note['note_id']}'\n")
         # f.write(f'笔记类型: {note.note_type}\n')
         f.write(f"笔记标题: {note['title']}\n")
         f.write(f"笔记描述: {note['desc']}\n")
@@ -416,7 +416,8 @@ def download_note_index(note_info, path, save_choice, comment_notes, comment_dis
 
     # 保存详细笔记信息
     save_custom_note_detail(note_info, save_path, index)
-    save_note_all_comment_detail(comment_display, save_path, index)
+    if comment_display is not None:
+        save_note_all_comment_detail(comment_display, save_path, index)
 
     # 下载图片或视频
     note_type = note_info['note_type']
@@ -428,12 +429,11 @@ def download_note_index(note_info, path, save_choice, comment_notes, comment_dis
         download_media(save_path, f'{index}_{title}_{note_id}_cover', note_info['video_cover'], 'image',
                        '{index}_视频封面')
         download_media(save_path, f'{index}_{title}_{note_id}_video', note_info['video_addr'], 'video', '{index}_video')
-
-    for comment_note in comment_notes:
-        comment_pictures = comment_note['pictures']
-        for img_index, img_url in enumerate(comment_pictures):
-            download_media(save_path, f'{index}_{title}_{note_id}_comment_{comment_note['comment_id']}_{comment_note['nickname']}_{img_index}', img_url, 'image',
-                           f'第{index}_comment_{comment_note['comment_id']}_{img_index}张图片')
+    if comment_notes is not None:
+        for comment_note in comment_notes:
+            comment_pictures = comment_note['pictures']
+            for img_index, img_url in enumerate(comment_pictures):
+                download_media(save_path, f"{index}_{title}_{note_id}_comment_{comment_note['comment_id']}_{comment_note['nickname']}_{img_index}', img_url, 'image', f'第{index}_comment_{comment_note['comment_id']}_{img_index}张图片")
 
     print(f'用户: {nickname}, {info}标题: {title} 笔记 {index} 保存成功')
     print('===================================================================')
